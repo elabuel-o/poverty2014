@@ -1,6 +1,13 @@
 
 library(XLConnect)
 library(ggplot2)
+library(foreign)
+library(ineq)
+library(stringr)
+library(scales)
+library(gtools)
+library(survey)
+
 
 ## ============================================================================
 ## Pobreza
@@ -117,3 +124,46 @@ plot.changes(df = extrema, year = 2010, file = "png", type = "extrema")
 
 ## plot for 2012-2014
 plot.changes(df = extrema, year = 2012, file = "png", type = "extrema")
+
+
+## ============================================================================
+## Gini indexes by State
+## ============================================================================
+
+## Loading data frames
+mydata <- read.dbf("./Bases de datos/Concen.dbf")
+mydata$CVE_ENT <- as.numeric(str_sub(mydata$ubica_geo, 1, 2))
+names <- read.csv("./Bases de datos/names.csv")
+
+colnames(names) <- c("CVE_ENT", "NOM_ENT", "NOM_ABR", "NOM_CAP")
+
+## creating the survey object
+## household factors, strata and sampling units
+svy_data <- svydesign(i = ~upm + folioviv, strata = ~est_dis, 
+                      weights = ~factor_hog, data = mydata)
+
+## nationwide gini coefficient
+gini <- svyquantile(~ing_cor, svy_data, seq(0, 1, by = 0.001))
+
+## quantiles for each state
+quant <- seq(0, 1, by = 0.001)
+quant_state <- svyby(~ing_cor, ~CVE_ENT, svy_data, svyquantile, 
+                     quantiles = quant, keep.var = FALSE)
+
+## applying the Gini function to each state
+quant_state_sub <- quant_state[ , 2:1002]
+quant_state_sub$gini <- apply(quant_state, 1, Gini)
+gini_states <- subset(quant_state_sub, select = gini)
+
+## setting the new data frame
+## two vectors
+CVE_ENT <- 1:32
+gini_vec <- gini_states$gini
+
+## insterting vectors as columns 
+gini_states$CVE_ENT <- CVE_ENT
+gini_states$gini_bis <- gini_vec
+
+gini_states <- subset(gini_states, select = c(CVE_ENT, gini_bis))
+
+gini_states <- merge(names, gini_states, by = "CVE_ENT")
