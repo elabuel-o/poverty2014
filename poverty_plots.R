@@ -23,7 +23,7 @@ read.conevalPH <- function(worksheet, cols, rows){
         
         ## loading the xlsx file into a XLConnect Workbook.
         ## XLConnect package required.
-        wb <- loadWorkbook("Anexo estadístico pruebas hipótesis 2010-2014.xlsx")
+        wb <- loadWorkbook("./data/Anexo estadístico pruebas hipótesis 2010-2014.xlsx")
         data <- readWorksheet(wb,
                                 sheet = worksheet, 
                                 startRow = rows[1], 
@@ -131,9 +131,9 @@ plot.changes(df = extrema, year = 2012, file = "png", type = "extrema")
 ## ============================================================================
 
 ## Loading data frames
-mydata <- read.dbf("./Bases de datos/Concen.dbf")
+mydata <- read.dbf("./data/Concen.dbf")
 mydata$CVE_ENT <- as.numeric(str_sub(mydata$ubica_geo, 1, 2))
-names <- read.csv("./Bases de datos/names.csv")
+names <- read.csv("./data/names.csv")
 
 colnames(names) <- c("CVE_ENT", "NOM_ENT", "NOM_ABR", "NOM_CAP")
 
